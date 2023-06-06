@@ -1,0 +1,277 @@
+<!doctype html>
+<html style="scrollbar-width: thin;">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="fcl.min.js"></script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #ddd;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="bg-gray-300 overflow-x-hidden flex flex-row w-screen">
+    <section class="bg-gray-50 flex-1 min-h-screen sm:h-auto sm:max-h-screen sm:overflow-y-scroll">
+      <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
+        <div class="md:mt-0 w-full">
+          <a href="#"
+            class="flex justify-center items-center mt-6 text-2xl font-semibold text-gray-900 dark:text-white w-full">
+            <img class="w-8 h-8 mr-2" src="img/logo.png" alt="logo">
+            FlowCerts
+          </a>
+          <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
+            <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900  dark:text-white">
+              {{
+                formStateIsSignup ? "Sign your Institution up for FlowCerts" : "Login to your Institution's FlowCerts account"
+              }}
+            </h1>
+
+            <p class="text-sm font-normal text-gray-500 dark:text-gray-400">
+              <b>Login / signup is meant for institutions which wish to issue certificates on FlowCerts.</b>
+              <br>If you are an employer or student, you may wish to <a class="underline"
+                href="index.html#verify">Verify
+                Certificates</a> issued on FlowCerts instead.
+            </p>
+            <form class="space-y-4 md:space-y-6" action="#">
+              <div v-if="formStateIsSignup">
+                <label for="institution"
+                  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Institution
+                  Name</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <i class="material-icons text-lg">school</i>
+                  </div>
+                  <input type="text" name="institution" id="institution" placeholder="FlowCerts Training" v-model="signupForm.name"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                    required="">
+                </div>
+              </div>
+
+              <div v-if="formStateIsSignup">
+                <label for="website" class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
+                  Institution Website
+                  <div class="text-xs mb-2 text-gray-500 font-normal">Ensure that you have full control over this
+                    website for verification purposes.
+                  </div>
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <i class="material-icons text-lg">language</i>
+                  </div>
+                  <input type="text" name="website" id="website" placeholder="https://example.com" v-model="signupForm.website"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                    required="">
+                </div>
+              </div>
+
+              <div v-if="formStateIsSignup">
+                <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  Your email
+                  <div class="text-xs mb-2 text-gray-500 font-normal">We strongly recommend using your organisation's
+                    email address (e.g. your.name@example.com) and not your personal email.
+                  </div>
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <i class="material-icons text-lg">email</i>
+                  </div>
+                  <input type="email" name="email" id="email" placeholder="your.name@example.com" v-model="signupForm.email"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                    required="">
+                </div>
+              </div>
+
+              <div v-if="formStateIsSignup" class="flex items-center justify-between">
+                <div class="flex items-start">
+                  <div class="flex items-center h-5">
+                    <input id="representative" aria-describedby="remember" type="checkbox" v-model="signupForm.representative"
+                      class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
+                      required="">
+                  </div>
+                  <div class="ml-3 text-sm">
+                    <label for="representative" class="text-gray-500 dark:text-gray-300">
+                      I declare that I am an authorised representative of my Institution (verification required later).
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" v-on:click="signIn"
+                class="flex-row justify-center items-center flex text-lg font-semibold w-full text-white bg-black focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                <i class="material-icons mr-2">login</i>
+                <span>Login with your organisation's Flow Wallet</span>
+              </button>
+
+              <details class="rounded-lg overflow-hidden">
+                <summary class="bg-gray-300 p-3 font-semibold cursor-pointer">Our organisation doesn't have a Flow
+                  Wallet yet. How can we create one?</summary>
+                <div class="bg-gray-200 p-3">
+                  <p>A Flow Wallet (account) is necessary in order to issue certificates on FlowCerts.</p>
+                  <br>
+                  <ol>
+                    <li>1. Click on "Sign up / Login with your Flow Wallet".</li>
+                    <li>2. Select one of the wallet options.</li>
+                    <li>3. Enter your email address and select "Register". You may have to check your email for further
+                      instructions to activate your Flow Wallet.</li>
+                    <li><b>At this stage, your Flow Wallet should have been created.</b><br><br></li>
+                    <li>4. Confirm that you would like to sign in to FlowCerts using your Flow Wallet.</li>
+                  </ol>
+
+                  <div class="bg-red-200 font-semibold p-3 rounded-lg mt-3 text-red-700">
+                    <b>IMPORTANT!</b>
+                    <p>Your organisation's Flow Wallet controls access to your organisation's certificates issued using
+                      FlowCerts. Keep the wallet's login details secure and do not lose access to the wallet.</p>
+                  </div>
+                </div>
+              </details>
+
+              <p v-if="formStateIsSignup" class="text-sm text-gray-500 dark:text-gray-400">
+                Already have an account? <a href="#" v-on:click="formStateIsSignup = !formStateIsSignup"
+                  class="font-medium text-primary-600 hover:underline dark:text-primary-500">Login</a>
+              </p>
+
+              <p v-if="!formStateIsSignup" class="text-sm text-gray-500 dark:text-gray-400">
+                Don't have an account yet? <a href="#" v-on:click="formStateIsSignup = !formStateIsSignup"
+                  class="font-medium text-primary-600 hover:underline dark:text-primary-500">Sign Up</a>
+              </p>
+
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                FlowCerts has been extensively tested with the Blocto Wallet. For best results, we recommend using Blocto Wallet when signing in.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="flex-1 sm:flex sm:flex-col sm:justify-center hidden p-14 text-white font-semibold"
+      style="background: linear-gradient(rgba(0, 0, 0, 0.60), rgba(0, 0, 0, 0.60)), url(img/bg.jpg) no-repeat center; background-size: cover;">
+      <h1 class="text-4xl mb-6">Start issuing your certificates on FlowCerts today!</h1>
+      <ul>
+        <li class="text-xl">Fight certificate forgery through easy verification</li>
+        <li class="text-xl">Affordable pricing</li>
+        <li class="text-xl">Simple to use</li>
+      </ul>
+      <div class="text-xl">Powered by Flow blockchain</div>
+    </section>
+  </div>
+
+  <script src="standard-fcl.js"></script>
+  <script>
+    window.onerror = function (message, source, lineno, colno, error) {
+      alert("Global error: " + error.message + ", lineno: " + lineno);
+      return true;
+    };
+
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          formStateIsSignup: false,
+          userSubscriber: null,
+          signupForm: {},
+        };
+      },
+      mounted() {
+        fcl.config.put("fcl.accountProof.resolver", async () => {
+          return await fetch(`${apiRoot}/api/accountProof/resolve`, {
+            body: "{}",
+            method: "post"
+          }).then(res => res.json());
+        });
+
+        this.userSubscriber = fcl.currentUser.subscribe(async currentUser => {
+          if (currentUser.addr !== null) { // signed in to Flow, check for user account
+            let accountProofVerified = false;
+            const tokenCheckRes = await this.checkToken();
+
+            if (tokenCheckRes) {
+              accountProofVerified = true;
+            }
+            else {
+              for (const s of currentUser.services) {
+                if (s.type === "account-proof" && s.data.nonce) {
+                  console.log(currentUser);
+                  let res = await fetch(`${apiRoot}/api/accountProof/verify`, {
+                    body: JSON.stringify({
+                      accountProofData: s.data,
+                    }),
+                    headers: {
+                      "content-type": "application/json"
+                    },
+                    method: "post",
+                  }).then(res => res.json());
+                  console.log(res);
+                  accountProofVerified = true;
+                  localStorage.setItem("token", res.token);
+                }
+              }
+            }
+
+            if (!accountProofVerified) {
+              alert("Unable to login to your Flow Wallet. Please try again.");
+              fcl.unauthenticate();
+            }
+            else {
+              if (this.formStateIsSignup) sessionStorage.setItem("userTemporaryData", JSON.stringify(this.signupForm));
+              if (tokenCheckRes && tokenCheckRes.data.setup) location.href = "dashboard/";
+              else location.href = "institution-onboarding/";
+            }
+          }
+          else {
+            localStorage.clear();
+            sessionStorage.clear();
+          }
+        });
+      },
+      methods: {
+        async checkToken() {
+          let token = localStorage.getItem("token");
+          if (token) {
+            let res = await fetch(`${apiRoot}/api/checkToken`, {
+              method: "post",
+              body: "{}",
+              headers: {
+                "content-type": "application/json",
+                "authorization": token,
+              },
+            }).then(res => res.json());
+
+            return res;
+          }
+
+          localStorage.removeItem("token");
+          return false;
+        },
+        async signIn(event) {
+          event.preventDefault();
+          if (!this.formStateIsSignup) fcl.authenticate();
+          if (this.signupForm.email && this.signupForm.representative && this.signupForm.website && this.signupForm.name) {
+            fcl.authenticate();
+          }
+          else {
+            return;
+          }
+        },
+      },
+    }).mount('#app');
+  </script>
+</body>
+
+</html>

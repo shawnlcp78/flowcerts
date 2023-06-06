@@ -1,0 +1,641 @@
+<!doctype html>
+<html style="scrollbar-width: thin;">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <script src="../tailwindcss.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../global.css" rel="stylesheet" />
+  <script src="../fcl.min.js"></script>
+  <script src="../standard-fcl.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: ['never']
+    };
+  </script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #ddd;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="flex-col flex h-screen">
+    <div class="flex-none flex-row items-center shadow-md z-10">
+      <div class="px-3 py-3 lg:px-5 lg:pl-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-start">
+            <button v-on:click="isMenuOpen = !isMenuOpen" aria-controls="logo-sidebar" type="button"
+              class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+              <span class="sr-only">Open sidebar</span>
+              <i class="material-icons">menu</i>
+            </button>
+            <a href="https://flowcerts.net" class="flex ml-2 md:mr-24">
+              <img src="../img/logo.png" class="h-8 mr-3" alt="logo" />
+              <span
+                class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">FlowCerts</span>
+            </a>
+          </div>
+          <div class="flex items-center">
+            <div class="flex items-center ml-3">
+              <div>
+                <button type="button" v-on:click="isUserMenuOpen = !isUserMenuOpen"
+                  class="z-50 relative flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                  aria-expanded="false">
+                  <span class="sr-only">Open user menu</span>
+                  <img class="w-8 h-8 rounded-full" src="../img/user.png"
+                    alt="user photo">
+                </button>
+              </div>
+              <div :class="{ 'opacity-0 scale-y-50 transform -translate-y-12': !isUserMenuOpen }"
+                class="transition-all scale-y-100 absolute opacity-1 right-0 top-9 translate-y-0 z-40 my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600">
+                <div class="px-4 py-3" role="none">
+                  <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">
+                    {{ sessionData.addr }}
+                  </p>
+                </div>
+                <ul class="py-1" role="none">
+                  <li>
+                    <button v-on:click="signOut"
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                      role="menuitem">Sign out</button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-row bg-gray-100 flex-grow">
+      <div class="flex-none bg-white p-4">
+        <ol
+          class="ml-6 sm:ml-3 mt-3 relative text-gray-500 border-l border-gray-200 dark:border-gray-700 dark:text-gray-400">
+          <li v-for="(step, index) of stepItems" class="mb-10 ml-6">
+            <span
+              class="bg-gray-200 absolute flex items-center justify-center w-8 h-8 rounded-full -left-4 ring-4 ring-white dark:ring-gray-900 dark:bg-green-900"
+              :class="{ 'bg-green-200': step.current || step.completed }">
+              <i v-if="!step.completed" class="material-icons text-gray-500 dark:text-gray-400 text-lg"
+                :class="{ 'text-green-500 dark:text-green-400': step.current }">{{ step.icon }}</i>
+              <i v-if="step.completed" class="material-icons text-green-500 dark:text-green-400 text-lg">check</i>
+            </span>
+
+            <div class="sm:hidden block">
+              <h3 class="font-semibold leading-tight">&nbsp;</h3>
+              <p class="text-sm">&nbsp;</p>
+            </div>
+
+            <div class="hidden sm:block">
+              <h3 class="font-semibold leading-tight">{{ step.title }}</h3>
+              <p class="text-sm">{{ step.description }}</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+      <div class="flex-grow max-h-screen overflow-y-scroll">
+        <div v-if="stepItems[0].current" class="p-6 flex flex-col gap-y-3">
+          <h2 class="font-semibold">Setup - Step 1</h2>
+          <h2 class="text-2xl font-semibold">Institution Information</h2>
+          <p class="mb-4">
+            Your organisation's website and name will be displayed on certificates which you issue using FlowCerts.
+            Ensure that they are accurate, as you will be required to verify your organisation's website in the next
+            step.
+          </p>
+
+          <form class="space-y-4 md:space-y-6" action="#">
+            <div>
+              <label for="institution" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Institution
+                Name</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <i class="material-icons text-lg">school</i>
+                </div>
+                <input type="text" name="institution" id="institution" placeholder="FlowCerts Training"
+                  v-model="signupForm.name"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                  required="">
+              </div>
+            </div>
+
+            <div>
+              <label for="website" class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">
+                Institution Website
+                <div class="text-xs mb-2 text-gray-500 font-normal">Ensure that you have control over this
+                  website's DNS records for verification purposes.
+                </div>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <i class="material-icons text-lg">language</i>
+                </div>
+                <input type="text" name="website" id="website" placeholder="https://example.com"
+                  v-model="signupForm.website"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                  required="">
+              </div>
+            </div>
+
+            <div>
+              <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Your email
+                <div class="text-xs mb-2 text-gray-500 font-normal">We strongly recommend using your organisation's
+                  email address (e.g. your.name@example.com) and not your personal email.
+                </div>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <i class="material-icons text-lg">email</i>
+                </div>
+                <input type="email" name="email" id="email" placeholder="your.name@example.com"
+                  v-model="signupForm.email"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                  required="">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-start">
+                <div class="flex items-center h-5">
+                  <input id="representative" aria-describedby="remember" type="checkbox"
+                    v-model="signupForm.representative"
+                    class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
+                    required="">
+                </div>
+                <div class="ml-3 text-sm">
+                  <label for="representative" class="text-gray-500 dark:text-gray-300">
+                    I declare that I am an authorised representative of my Institution.
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button v-on:click="step1"
+              class="rounded-md px-4 py-2 h-min font-semibold cursor-pointer bg-black text-white hover:bg-gray-400 hover:text-black transition">Continue</button>
+          </form>
+        </div>
+
+        <div v-if="stepItems[1].current" class="p-6 flex flex-col gap-y-3">
+          <h2 class="font-semibold">Setup - Step 2</h2>
+          <h2 class="text-2xl font-semibold">Verify Information</h2>
+          <p class="mb-4">
+            Follow the instructions below to verify your ownership of your institution's website.
+          </p>
+
+          <div v-if="!verificationRecord && notVerifying"
+            class="w-full h-48 flex-col flex justify-center items-center bg-gray-200 rounded-md border-dashed border-2 border-gray-400 text-gray-500 font-semibold">
+            <span class="loader block mb-5"></span>
+            <div class="mt-5">Loading Verification Data...</div>
+            <img src="../img/secured_chainlink_badge.jpg" class="w-auto h-12 mt-5 rounded-md" />
+          </div>
+
+          <div v-if="verificationRecord && !notVerifying"
+            class="w-full h-36 flex-col flex justify-center items-center bg-gray-200 rounded-md border-dashed border-2 border-gray-400 text-gray-500 font-semibold">
+            <span class="loader block mb-5"></span>
+            <div class="mt-5">Verifying</div>
+          </div>
+
+          <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400" v-if="verificationRecord && notVerifying">
+            <caption
+              class="p-5 text-lg font-semibold text-left text-gray-900 bg-white dark:text-white dark:bg-gray-800">
+              <div class="flex flex-row">
+                <div class="flex-grow">
+                  DNS Record Verification
+                  <p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">Add the following DNS records to
+                    your organisation's website to verify ownership:</p>
+                </div>
+
+                <div class="flex-none">
+                  <img src="../img/secured_chainlink_badge.jpg" class="h-14 w-auto" />
+                </div>
+              </div>
+            </caption>
+            <thead class="text-xs text-gray-700 uppercase bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
+              <tr>
+                <th scope="col" class="px-6 py-3">
+                  Name
+                </th>
+                <th scope="col" class="px-6 py-3">
+                  Type
+                </th>
+                <th scope="col" class="px-6 py-3">
+                  Content
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  {{ verificationRecord.recordDomain }}
+                </th>
+                <td class="px-6 py-4">
+                  TXT
+                </td>
+                <td class="px-6 py-4 break-all">
+                  {{ verificationRecord.recordContent }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="text-sm mt-2 bg-yellow-200 text-yellow-800 border-yellow-400 border-2 font-semibold p-4 rounded-md" v-if="verificationFailed">
+            Your DNS records may still be updating. Refresh this page in 5-10 minutes and try again. If you have tried multiple times, please check your DNS records or wait for a longer period before trying again.
+          </div>
+
+          <button v-if="verificationRecord && notVerifying" v-on:click="step2"
+            class="rounded-md px-4 py-2 h-min font-semibold cursor-pointer bg-black text-white hover:bg-gray-400 hover:text-black transition">We've added the DNS records and are ready to be verified.</button>
+
+          <div class="text-sm mt-2">
+            Verification <b>usually</b> happens in a few minutes, but may take up to a few hours due to DNS caching.
+            <br>For faster verification, wait a minute or two after updating your DNS records before clicking the above button.
+          </div>
+        </div>
+
+        <div v-if="stepItems[2].current" class="p-6 flex flex-col gap-y-3">
+          <h2 class="font-semibold">Setup - Step 3</h2>
+          <h2 class="text-2xl font-semibold">Prepare Flow Account</h2>
+          <p class="mb-4">
+            FlowCerts has to setup your Flow Account first. Click Setup and allow FlowCerts to perform the setup.
+          </p>
+
+          <button v-on:click="setupAccount"
+            class="hover:bg-gray-600 transition-all flex-row justify-center items-center flex text-lg font-semibold w-full text-white bg-black focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg px-5 py-2.5 text-center">
+            <i class="material-icons mr-2">settings_suggest</i>
+            <span>Setup your organisation's Flow Wallet</span>
+          </button>
+        </div>
+
+        <div v-if="stepItems[3].current" class="p-6 flex flex-col gap-y-3">
+          <h2 class="font-semibold">Setup - Step 4</h2>
+          <h2 class="text-2xl font-semibold">Free Tier &amp; Pricing</h2>
+          <p class="mb-4">
+            This is a quick overview of FlowCerts' pricing structure.
+          </p>
+
+          <div class="border-2 border-gray-300 p-4 bg-white rounded-md flex flex-row items-center">
+            <div class="font-semibold flex-none text-3xl pr-5">Free</div>
+            <div class="text-gray-600 flex-grow pl-5 border-l-2 border-gray-300">
+              <div class="text-lg font-semibold mb-2">Generous free tier to help your organisation understand how FlowCerts works.</div>
+              2000 collection of up to 10000 certificates (TESTING PHASE)
+              <br>~1 MB of certificate data <sub>(slightly less due to metadata storage)</sub>
+            </div>
+          </div>
+
+          <div class="border-2 border-gray-300 p-4 bg-white rounded-md flex flex-row items-center">
+            <div class="font-semibold flex-none text-3xl pr-5">Paid</div>
+            <div class="text-gray-600 flex-grow pl-5 border-l-2 border-gray-300">
+              <div class="text-lg font-semibold mb-2">Simple &amp; affordable pricing to ensure that issuing secure certificates for your students isn't expensive.</div>
+              1 FLOW per 100 MB of certificate data - add Flow to your address to increase this limit.
+              <br>+ 0.001 FLOW fee for each certificate
+              <br>NO MONTHLY / ONGOING FEES; PAYMENTS ARE PREPAID.
+
+              <br><div class="text-sm mt-2">
+                Your payments go towards maintaining the infrastructure used to secure your certificates on FlowCerts.
+                <br>Prices are in FLOW. Exchange rate to USD and other currencies may fluctuate.
+              </div>
+            </div>
+          </div>
+
+          <p class="mt-4">
+            Your account can store up to the maximum number of certificates you paid for OR the maximum amount of certificate data storage, depending on which limit is hit first.
+            <br>As FlowCerts is currently operating on Flow Testnet, you can simply transfer FLOW to your account address <b>({{ sessionData.addr }})</b> using the <a target="_blank" class="text-blue-600 underline" href="https://testnet-faucet.onflow.org/fund-account">Testnet Faucet</a>.
+          </p>
+
+          <div>
+            <button v-on:click="step3"
+              class="rounded-md px-4 py-2 h-min font-semibold cursor-pointer bg-black text-white hover:bg-gray-400 hover:text-black transition">Continue</button>
+          </div>
+        </div>
+
+        <div v-if="stepItems[4].current" class="p-6 flex flex-col gap-y-3">
+          <h2 class="text-2xl font-semibold">Step 5</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onerror = function (message, source, lineno, colno, error) {
+      alert("Global error: " + error.message + ", lineno: " + lineno);
+      return true;
+    };
+
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          verificationFailed: false,
+          notVerifying: true,
+          isUserMenuOpen: false,
+          sessionData: {},
+          currentStep: 0,
+          signupForm: {},
+          domain: "",
+          verificationRecord: null,
+          stepItems: [
+            {
+              title: "Institution Info",
+              description: "For verification purposes",
+              icon: "info",
+
+              completed: false,
+              current: true,
+            },
+            {
+              title: "Verify Info",
+              description: "Verify institution info",
+              icon: "fingerprint",
+
+              completed: false,
+              current: false,
+            },
+            {
+              title: "Prepare Account",
+              description: "Setup your Flow Account",
+              icon: "settings_suggest",
+
+              completed: false,
+              current: false,
+            },
+            {
+              title: "Storage",
+              description: "Free tier and pricing",
+              icon: "credit_card",
+
+              completed: false,
+              current: false,
+            },
+            {
+              title: "Done!",
+              description: "Ready to issue certificates",
+              icon: "done_all",
+
+              completed: false,
+              current: false,
+            },
+          ],
+        };
+      },
+      async mounted() {
+        // check if signed in
+        fcl.currentUser.subscribe(async currentUser => {
+          if (currentUser.addr == null) {
+            localStorage.removeItem("token");
+            location.href = "../login.html";
+            return;
+          }
+        });
+
+        let token = localStorage.getItem("token");
+        if (token) {
+          let res = await fetch(`${apiRoot}/api/checkToken`, {
+            method: "post",
+            body: "{}",
+            headers: {
+              "content-type": "application/json",
+              "authorization": token,
+            },
+          }).then(res => res.json());
+
+          this.sessionData = res.data;
+
+          if (res.data.setup) {
+            location.href = "../dashboard";
+            return;
+          }
+        }
+        else {
+          location.href = "../login.html";
+          return;
+        }
+
+        let prefilled = sessionStorage.getItem("userTemporaryData");
+        if (prefilled) {
+          this.signupForm = JSON.parse(prefilled);
+        }
+
+        if (sessionStorage.getItem("awaitingVerification")) {
+          this.stepItems[0].completed = true;
+          this.stepItems[0].current = false;
+          this.stepItems[1].current = true;
+
+          this.step1();
+        }
+      },
+      methods: {
+        async signOut() {
+          fcl.unauthenticate(); location.href = '../login.html';
+        },
+        async setupAccount() {
+          // check if account already has the tokens
+          try {
+            let queryCode = `// to be signed by Admin
+import FilePrivilegesContract from 0xFilePrivilegesContract
+
+pub fun main(address: Address) {
+  let receiverAcct = getAccount(address)
+  let receiver = receiverAcct
+    .getCapability(/public/filePrivileges)
+    .borrow<&AnyResource{FilePrivilegesContract.AccountTokenCollectionPublic}>()
+    ?? panic("Unable to borrow AccountTokenCollectionPublic")
+}`;
+
+            let checkTokenRes = await fcl.query({
+              cadence: queryCode,
+              args: (arg, t) => [
+                arg(this.sessionData.addr, t.Address),
+              ],
+            });
+
+            console.log(checkTokenRes);
+          }
+          catch (e) {
+            console.log(e);
+            let cadenceCode = `// to be signed by Client
+import FileNFTContract3 from 0x8af0983838671200
+import FilePrivilegesContract from 0x8af0983838671200
+
+transaction {
+  prepare(acct: AuthAccount) {
+    acct.save(<- FilePrivilegesContract.createEmptyCollection(), to: /storage/filePrivileges)
+
+    // expose through restricted interface
+    acct.link<&AnyResource{FilePrivilegesContract.AccountTokenCollectionPublic}>(/public/filePrivileges, target: /storage/filePrivileges)
+
+    // collection
+    acct.save(<- FileNFTContract3.createEmptyIndex(), to: /storage/fileNftIndex)
+  }
+}`;
+
+            let txId = await fcl.mutate({
+              cadence: cadenceCode,
+            });
+            
+            let transaction = await fcl.tx(txId).onceSealed();
+
+            let res = await fetch(`${apiRoot}/api/account/adminInit`, {
+              method: "post",
+              body: "{}",
+              headers: {
+                "content-type": "application/json",
+                "authorization": localStorage.getItem("token"),
+              },
+            }).then(res => res.json());
+
+            if (res.success) {
+              localStorage.setItem("token", res.newToken);
+              this.stepItems[2].completed = true;
+              this.stepItems[2].current = false;
+              this.stepItems[3].current = true;
+            }
+          }
+
+          this.stepItems[2].completed = true;
+          this.stepItems[2].current = false;
+          this.stepItems[3].current = true;
+        },
+        async step1(event) {
+          if (event) {
+            event.preventDefault();
+            if (!event.target.parentElement.checkValidity()) {
+              event.target.parentElement.reportValidity();
+            }
+          }
+
+          try {
+            sessionStorage.setItem("userTemporaryData", JSON.stringify(this.signupForm));
+
+            const url = new URL(this.signupForm.website);
+            if (!url.hostname) throw Error();
+
+            this.domain = url.hostname;
+
+            let confirmResult = await Swal.fire({
+              icon: "question",
+              title: `Domain '${this.domain}'`,
+              text: "Continue with this domain?",
+              showCancelButton: true,
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            });
+
+            if (confirmResult.isConfirmed !== true) return;
+
+            this.stepItems[0].completed = true;
+            this.stepItems[0].current = false;
+            this.stepItems[1].current = true;
+
+            await fetch(`${apiRoot}/api/verification/requestRecord`, {
+              method: "post",
+              body: JSON.stringify({
+                name: this.signupForm.name,
+                domain: this.domain,
+                email: this.signupForm.email,
+              }),
+              headers: {
+                "content-type": "application/json",
+                "authorization": localStorage.getItem("token"),
+              },
+            }).then(res => res.json());
+
+            // poll to check if verification record has been issued
+            while (!this.verificationRecord) {
+              let res = await fetch(`${apiRoot}/api/verification/getRecord`, {
+                method: "post",
+                body: "{}",
+                headers: {
+                  "content-type": "application/json",
+                  "authorization": localStorage.getItem("token"),
+                },
+              }).then(res => res.json());
+
+              if (res.ready) {
+                this.verificationRecord = res.verificationRecord;
+                break;
+              }
+
+              await new Promise(resolve => {
+                setTimeout(resolve, 10000);
+              });
+            }
+          }
+          catch (e) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Invalid website',
+              text: 'Please enter a valid website URL (e.g. https://example.com/)',
+            });
+          }
+        },
+        async step2() {
+          sessionStorage.setItem("awaitingVerification", true);
+          this.notVerifying = false;
+
+          let res = await fetch(`${apiRoot}/api/verification/verify`, {
+            method: "post",
+            body: JSON.stringify({}),
+            headers: {
+              "content-type": "application/json",
+              "authorization": localStorage.getItem("token"),
+            },
+          }).then(res => res.json()).catch((err) => {
+            this.verificationFailed = true;
+            this.notVerifying = true;
+          });
+
+          this.notVerifying = true;
+
+          if (!res.verified) {
+            this.verificationFailed = true;
+          }
+          else {
+            this.verificationFailed = false;
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Verified!',
+              text: 'Your institution\'s website has been verified.',
+            });
+
+            this.stepItems[1].completed = true;
+            this.stepItems[1].current = false;
+            this.stepItems[2].current = true;
+          }
+        },
+        async step3() {
+          this.stepItems[3].completed = true;
+          this.stepItems[3].current = false;
+          this.stepItems[4].current = true;
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Congratulations!',
+            text: 'Your institution can now issue secure, verifiable certificates using FlowCerts!',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+          }).then(() => {
+            location.href = "../dashboard/";
+          });
+        },
+      },
+    }).mount('#app');
+  </script>
+</body>
+
+</html>

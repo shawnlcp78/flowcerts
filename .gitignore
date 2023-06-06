@@ -1,0 +1,13 @@
+functions-hardhat-starter-kit/
+node_modules/
+.env
+flowdb/
+dev-grant-quota.js
+dev-pdf.js
+flow.json
+Sample1.pdf
+tmp.js
+draw-pdf/
+blocto-app.html
+files-v2.tar.gz
+output.pdf

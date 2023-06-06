@@ -1,0 +1,477 @@
+<!doctype html>
+<html style="scrollbar-width: thin;">
+
+<!-- https://demos.creative-tim.com/soft-ui-dashboard-tailwind/pages/dashboard.html -->
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <script src="tailwindcss.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link href="global.css" rel="stylesheet" />
+  <script src="fcl.min.js"></script>
+  <script src="standard-fcl.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.min.js"
+    integrity="sha512-KEoL9wKXt/fhlAfN+ZNXf3pI48aaQE9Qd5fihHY+5n5XLTSnyGJ0uKgUj//V6KAcjFwzAbCYYPKeGlFES/H5Ng=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: ['never']
+    };
+  </script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #ddd;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <nav
+      class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-md">
+      <div class="px-3 py-3 lg:px-5 lg:pl-3">
+        <div class="flex items-center justify-between">
+          <div class="flex flex-grow items-center justify-start">
+            <a href="https://flowcerts.net" class="flex ml-2 md:mr-24">
+              <img src="img/logo.png" class="h-8 mr-3" alt="logo" />
+              <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">FlowCerts Viewer</span>
+            </a>
+          </div>
+          <div class="flex items-center flex-none gap-x-2" v-if="certificateState === 'success'">
+            <a :href="pdfDownloadHref" :download="pdfDownloadName" class="flex flex-row items-center bg-gray-200 hover:bg-gray-400 transition-all cursor-pointer p-2 rounded-md">
+              <i class="material-symbols-outlined">download</i>
+              <span class="flex-1 ml-3 whitespace-nowrap sm:block hidden">Download PDF</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="flex flex-row">
+      <div class="h-screen pt-20 overflow-y-scroll p-6 bg-gray-100 flex-1 space-y-4 sm:block"
+        :class="{ 'hidden': certificateState !== 'none' }">
+        <h2 class="font-semibold text-2xl text-gray-700 text-center">Upload a FlowCerts PDF Certificate</h2>
+        <p>Upload a FlowCerts PDF Certificate to verify its authenticity.</p>
+        <p>Certificates issued using FlowCerts are transparent, verifiable and secured using the Flow blockchain, a
+          high-performance and battle tested decentralised network.</p>
+
+        <div class="flex items-center justify-center w-full mt-4">
+          <label for="dropzone-file-sample"
+            class="flex flex-col items-center justify-center w-full h-72 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+              <i aria-hidden="true" class="material-symbols-outlined mb-3 text-gray-400 text-6xl">upload_file</i>
+
+              <p v-if="sampleWidget.files.length === 0" class="mb-2 text-xl text-gray-500 dark:text-gray-400">
+                <span class="font-semibold">Click to upload</span>
+                <span> or drag and drop</span>
+              </p>
+
+              <p v-if="sampleWidget.files.length === 0" class="text-gray-500 dark:text-gray-400">
+                PDF files only.
+              </p>
+
+              <p v-if="sampleWidget.files.length !== 0" class="mb-2 text-gray-500">
+                {{ sampleWidget.files[0].name }}
+              </p>
+
+              <p v-if="sampleWidget.showRequired" class="text-red-500">
+                Only one PDF certificate must be uploaded.
+              </p>
+            </div>
+            <input v-on:change="updateFiles" id="dropzone-file-sample" type="file" class="hidden" />
+          </label>
+        </div>
+
+        <button v-on:click="loadFromFile"
+          class="bg-black w-full rounded-md px-4 py-2 h-min font-semibold cursor-pointer text-white hover:bg-gray-500 transition">Continue</button>
+      </div>
+
+      <div class="h-screen pt-20 overflow-y-scroll p-6 flex-1 sm:block"
+        :class="{ 'hidden': certificateState == 'none' }">
+        <div v-if="certificateState === 'none'">
+          <h2 class="font-semibold text-2xl text-gray-700 text-center">Certificate Details</h2>
+          <p class="text-center mt-4">Upload a certificate to view verification details.</p>
+        </div>
+
+        <div v-if="certificateState === 'success'"
+          class="bg-green-200 flex-row flex text-green-800 items-center p-4 rounded-lg border-green-500 border-2">
+          <i class="material-symbols-outlined font-semibold sm:block hidden" style="font-size: 5rem;">check_circle</i>
+          <div class="sm:ml-4">
+            <h2 class="font-semibold text-xl mb-2" v-if="certificateState === 'success'">Certificate verified</h2>
+            <a class="block mb-2 underline text-blue-800 cursor-pointer break-all" :href="`https://flowcerts.net/#${ shortcutVue }${ keyVue ? `/${keyVue}` : '' }`">https://flowcerts.net/#{{ shortcutVue }}{{ keyVue ? `/${keyVue}` : "" }}</a>
+            <div v-for="t of certificateCheckInfo">✅ {{ t }}</div>
+          </div>
+        </div>
+
+        <div v-if="certificateState === 'failure'"
+          class="bg-red-200 flex-row flex text-red-800 items-center p-4 rounded-lg border-red-800 border-2">
+          <i class="material-symbols-outlined font-semibold" style="font-size: 5rem;">gpp_bad</i>
+          <div class="sm:ml-4">
+            <h2 class="font-semibold text-xl mb-2">Certificate has errors and could not be verified</h2>
+            <p>❌ {{ certificateError }}</p>
+          </div>
+        </div>
+
+        <div v-if="certificateState === 'success'"
+          class="bg-gray-200 flex-row flex text-gray-800 items-center p-4 rounded-lg border-gray-500 border-2 mt-6">
+          <i class="material-symbols-outlined font-semibold sm:block hidden" style="font-size: 2rem;">apartment</i>
+          <div class="sm:ml-4">
+            <div class="text-lg font-semibold">
+              <span>Verified Issuer:&nbsp;</span>
+              <a class="text-blue-800 cursor-pointer underline" :href="`https://${ certificateFile.verifiedDomain }`">https://{{ certificateFile.verifiedDomain }}</a>
+            </div>
+            <p>
+              The issuer of the certificate has gone through a verification process to ensure that they own this website.
+              <br><a class="text-blue-800 cursor-pointer underline" :href="JSON.parse(certificateFile.verifyLink).txHash">View Verification Transaction (Chainlink Functions)</a>
+            </p>
+          </div>
+        </div>
+
+        <div v-if="certificateState === 'loading'"
+          class="w-full h-64 flex-col mt-6 flex justify-center items-center bg-gray-200 rounded-md border-dashed border-2 border-gray-400 text-gray-500 font-semibold">
+          <span class="loader block mb-5"></span>
+          <div class="mt-5 text-center">
+            <div class="text-lg mb-2">Verifying Certificate Data...</div>
+            <div v-for="t of certificateCheckInfo">✅ {{ t }}</div>
+          </div>
+        </div>
+
+        <div v-if="certificateState === 'success'" class="bg-gray-100 rounded-md p-2 shadow-md mt-6">
+          <img v-for="i of pdfPageImages" :src="i.url" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onerror = function (message, source, lineno, colno, error) {
+      alert("Global error: " + error.message + ", lineno: " + lineno);
+      return true;
+    };
+
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          pdfDownloadHref: "",
+          pdfDownloadName: "",
+          certificateState: "none", // none, loading, success, failure
+          certificateError: null,
+          certificateCheckInfo: [], // array of strings
+          checks: {
+            metadata: { success: "Loaded certificate metadata.", failure: "Could not find certificate metadata. Please upload a valid file or use a valid URL." },
+            found: { success: "Certificate found on the Flow blockchain.", failure: "Certificate DOES NOT EXIST on the Flow blockchain." },
+            decrypted: { success: "Certificate decrypted.", failure: "Could not decrypt certificate." },
+            integrity: { success: "Integrity verified. Certificate has not been tampered with.", failure: "Integrity VIOLATION. Certificate may have been tampered with!" },
+          },
+          isMenuOpen: true,
+          pdfPageImages: [],
+          sampleWidget: {
+            files: [],
+            showRequired: false,
+          },
+          certificateFile: {},
+          shortcutVue: null,
+          keyVue: null,
+        };
+      },
+      async mounted() {
+        if (location.hash) {
+          let segments = location.hash.substring(1).split("/");
+          let shortcutID = segments[0];
+          let key = segments[1];
+
+          this.shortcutVue = shortcutID;
+          this.keyVue = key;
+
+          this.loadFromFlow(shortcutID, key);
+        }
+      },
+      methods: {
+        updateFiles(e) {
+          var files = e.target.files;
+          this.sampleWidget.files = files;
+        },
+        async digestMessage(message) {
+          const hashBuffer = await crypto.subtle.digest("SHA-256", message); // hash the message
+          const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+          const hashHex = hashArray
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join(""); // convert bytes to hex string
+          return hashHex;
+        },
+        base64ToArrayBuffer(base64) {
+          var binaryString = atob(base64);
+          var bytes = new Uint8Array(binaryString.length);
+          for (var i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          return bytes.buffer;
+        },
+        async loadFromFile() {
+          // try to find metadata text...
+          if (this.sampleWidget.files.length !== 1 || this.sampleWidget.files[0].type !== "application/pdf") {
+            this.sampleWidget.showRequired = true;
+            return;
+          }
+
+          var PDFJS = window['pdfjs-dist/build/pdf'];
+
+          const getPgText = async (pdf, pageNo) => {
+            const page = await pdf.getPage(pageNo);
+            const tokenizedText = await page.getTextContent();
+            const pageText = tokenizedText.items.map(token => token.str).join("\n");
+            return pageText;
+          };
+
+          extractText = async (buffer) => {
+            PDFJS.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js';
+            const pdf = await PDFJS.getDocument(buffer).promise;
+            const pages = pdf.numPages;
+            const pageTextPromises = [];
+            for (let i = 1; i <= pages; i += 1) {
+              pageTextPromises.push(getPgText(pdf, i));
+            }
+            const pageTexts = await Promise.all(pageTextPromises);
+            return pageTexts.join(" ");
+          };
+
+          let text = await extractText(await this.sampleWidget.files[0].arrayBuffer());
+          let lines = text.split("\n");
+          for (const l of lines) {
+            if (l.includes("/CERTS_2E3ACE#")) {
+              let segments = l.split("#")[1].split("/");
+              this.shortcutVue = segments[0];
+              this.keyVue = segments[1];
+
+              this.loadFromFlow(segments[0], segments[1]);
+              return;
+            }
+          }
+
+          this.certificateState = "failure";
+          this.certificateError = this.checks.metadata.failure;
+          await Swal.fire({
+            icon: "error",
+            title: `Unknown Format`,
+            text: `Unable to detect FlowCerts metadata. This PDF file may not be a FlowCerts certificate. Try uploading a FlowCerts certificate instead.`,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+          });
+          return;
+        },
+        async loadFromFlow(shortcut, key = null) {
+          this.certificateState = "loading";
+          this.certificateCheckInfo = [];
+          this.certificateError = null;
+          this.certificateFile = {};
+
+          this.certificateCheckInfo.push(this.checks.metadata.success);
+
+          const cadenceCode = `import FileNFTContract3 from 0x8af0983838671200
+import FilePrivilegesContract from 0x8af0983838671200
+import FileShortcutsContract4 from 0x8af0983838671200
+
+pub fun main(shortcut: String): {String: String} {
+  // Get shortcut
+  let address = FileShortcutsContract4.getA(key: shortcut)
+  let collectionId = FileShortcutsContract4.getC(key: shortcut)
+  let tokenId = FileShortcutsContract4.getF(key: shortcut)
+
+  let output: {String: String} = {}
+
+  // Basic data
+  let publicInterface = getAccount(address).getCapability<&AnyResource{FileNFTContract3.FileNFTCollectionPublicInterface}>(PublicPath(identifier: "fileNftCollection_".concat(collectionId))!).borrow()!
+
+  let file <- publicInterface.getFile(id: tokenId)
+
+  output["id"] = file.id
+  output["fileData"] = file.fileData
+  output["fileName"] = file.fileName
+  output["isEncrypted"] = file.isEncrypted == true ? "true" : "false"
+  output["collectionName"] = file.collectionName
+  output["originalFileHash"] = file.originalFileHash
+  output["isActive"] = file.isActive == true ? "true" : "false"
+
+  // Verification data
+  let verificationPublicInterface = getAccount(0x8af0983838671200).getCapability<&AnyResource{FileNFTContract3.AccountDataSource}>(/public/accountDataSource).borrow()!
+
+  let verificationData = verificationPublicInterface.getCollectionVerificationData(collectionId: collectionId)
+  output["verifiedDomain"] = verificationData["verifiedDomain"]!
+  output["verifyLink"] = verificationData["verifyLink"]!
+
+  destroy file
+
+  return output
+}`;
+
+          try {
+            let file = null;
+            try {
+              file = await fcl.query({
+                cadence: cadenceCode,
+                args: (arg, t) => [
+                  arg(shortcut, t.String),
+                ]
+              });
+            }
+            catch (e) {
+              this.certificateState = "failure";
+              this.certificateError = this.checks.found.failure;
+              await Swal.fire({
+                icon: "error",
+                title: `Not Found`,
+                text: `The certificate you are trying to verify does not exist on the Flow blockchain.`,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+              });
+              return;
+            }
+
+            this.certificateCheckInfo.push(this.checks.found.success);
+
+            let fileDecrypted = null;
+
+            if (file.isEncrypted === "true") {
+              this.certificateCheckInfo.push(this.checks.decrypted.success);
+
+              if (!key) {
+                this.certificateState = "failure";
+                this.certificateError = this.checks.decrypted.failure;
+                await Swal.fire({
+                  icon: "error",
+                  title: `Key Required`,
+                  text: `The certificate you are trying to verify is encrypted, but you have not provided the key to decrypt it. Please use the original viewing URL.`,
+                  allowOutsideClick: false,
+                  allowEscapeKey: false,
+                });
+                return;
+              }
+
+              let iv = this.base64ToArrayBuffer(file.fileData.split(".")[0])
+              let enc = new TextEncoder();
+              let keyObj = await crypto.subtle.importKey("raw", enc.encode(`${key}${key}`.substring(0, 32)).buffer, "AES-CBC", true, [
+                "encrypt",
+                "decrypt",
+              ]);
+              fileDecrypted = await crypto.subtle.decrypt({ name: "AES-CBC", iv }, keyObj, this.base64ToArrayBuffer(file.fileData.split(".")[1]));
+              console.log(fileDecrypted)
+            }
+            else {
+              fileDecrypted = this.base64ToArrayBuffer(file.fileData);
+            }
+
+            if (this.sampleWidget.files[0]) {
+              fileDecrypted = await this.sampleWidget.files[0].arrayBuffer();
+            }
+
+            if (file.originalFileHash === await this.digestMessage(fileDecrypted)) {
+              this.certificateCheckInfo.push(this.checks.integrity.success);
+            }
+            else {
+              this.certificateState = "failure";
+              this.certificateError = this.checks.integrity.failure;
+              await Swal.fire({
+                icon: "error",
+                title: `Integrity Violated`,
+                text: `The certificate may have been tampered with. File hash "${await this.digestMessage(fileDecrypted)}" does not match hash stored on the Flow blockchain "${file.originalFileHash}".`,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+              });
+              return;
+            }
+
+            let blobData = new Blob([fileDecrypted]);
+            this.pdfDownloadHref = URL.createObjectURL(blobData);
+            this.pdfDownloadName = file.fileName;
+
+            var PDFJS = window['pdfjs-dist/build/pdf'];
+
+            PDFJS.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js';
+
+            var loadingTask = PDFJS.getDocument(fileDecrypted);
+
+            let vueAppData = this;
+
+            loadingTask.promise.then(async function (pdf) {
+              var totalPages = pdf.numPages
+              var data = [];
+
+              for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+                pdf.getPage(pageNumber).then((page) => {
+
+                  var scale = 2;
+                  var viewport = page.getViewport({ scale: scale });
+
+                  var canvas = document.createElement('canvas');
+
+                  // Prepare canvas using PDF page dimensions
+                  var context = canvas.getContext('2d');
+                  canvas.height = viewport.height;
+                  canvas.width = viewport.width;
+
+                  // Render PDF page into canvas context
+                  var renderContext = { canvasContext: context, viewport: viewport };
+
+                  var renderTask = page.render(renderContext);
+
+                  console.log("render")
+
+                  renderTask.promise.then(function () {
+                    console.log(canvas.toDataURL('image/png'));
+                    vueAppData.pdfPageImages.push({
+                      url: canvas.toDataURL('image/png'),
+                      height: viewport.height,
+                      width: viewport.width,
+                    });
+                  }).catch(e => {
+                    alert(e);
+                  });
+                });
+              }
+            }, function (reason) {
+              // PDF loading error
+              console.error(reason);
+            });
+
+            this.certificateState = "success";
+            this.certificateFile = file;
+          }
+          catch (e) {
+            console.log(e);
+
+            this.certificateState = "failure";
+            this.certificateError = "Failed";
+
+            await Swal.fire({
+              icon: "error",
+              title: `Error`,
+              text: `Unable to verify this certificate.`,
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            });
+          }
+        }
+      },
+    }).mount('#app');
+  </script>
+</body>
+
+</html>
