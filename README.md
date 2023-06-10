@@ -7,10 +7,9 @@ Thank you for organising this interesting hackathon!
 
 ## Watch the Video
 
+[![Watch the Video](flowcerts-video.png)](https://www.youtube.com/watch?v=oDXE1yjMEmg)
 
-[Watch the Video](https://youtube.com/watch?v=oDXE1yjMEmgusi)
-
-https://youtube.com/watch?v=oDXE1yjMEmgusi
+https://www.youtube.com/watch?v=oDXE1yjMEmg
 
 ## What is FlowCerts?
 
