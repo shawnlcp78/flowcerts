@@ -1,0 +1,312 @@
+<!doctype html>
+<html style="scrollbar-width: thin;">
+
+<!-- https://demos.creative-tim.com/soft-ui-dashboard-tailwind/pages/dashboard.html -->
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <script src="../tailwindcss.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link href="../global.css" rel="stylesheet" />
+  <script src="../fcl.min.js"></script>
+  <script src="../standard-fcl.js"></script>
+
+  <title>FlowCerts</title>
+
+  <script>
+    tailwind.config = {
+      darkMode: ['never']
+    };
+  </script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #ddd;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <div class="px-3 py-3 lg:px-5 lg:pl-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-start">
+            <button v-on:click="isMenuOpen = !isMenuOpen" aria-controls="logo-sidebar"
+              type="button"
+              class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+              <span class="sr-only">Open sidebar</span>
+              <i class="material-symbols-outlined">menu</i>
+            </button>
+            <a href="https://flowcerts.net" class="flex ml-2 md:mr-24">
+              <img src="../img/logo.png" class="h-8 mr-3" alt="logo" />
+              <span
+                class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">FlowCerts</span>
+            </a>
+          </div>
+          <div class="flex items-center">
+            <div class="flex items-center ml-3">
+              <div>
+                <button type="button"
+                  v-on:click="isUserMenuOpen = !isUserMenuOpen"
+                  class="z-50 relative flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                  aria-expanded="false">
+                  <span class="sr-only">Open user menu</span>
+                  <img class="w-8 h-8 rounded-full" src="../img/user.png"
+                    alt="user photo">
+                </button>
+              </div>
+              <div
+                :class="{ 'opacity-0 scale-y-50 transform -translate-y-20': !isUserMenuOpen }"
+                class="transition-all scale-y-100 absolute opacity-1 right-0 top-9 translate-y-0 z-40 my-4 text-base list-none bg-white divide-y divide-gray-300 rounded-md mr-2 shadow-lg dark:bg-gray-700 dark:divide-gray-600">
+                <div class="px-4 py-3 text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">
+                  <p class="font-semibold text-base" role="none">
+                    {{ userData.domain }}
+                  </p>
+                  <p role="none">
+                    {{ userData.addr }}
+                  </p>
+                  <p class="mt-4" role="none">
+                    ~{{ Math.round(userData.flowBalance) }} FLOW (~{{ Math.round(userData.flowBalance * 100) }} MB)
+                  </p>
+                  <p role="none">
+                    {{ userData.sCreationLeft }} certificates remaining
+                  </p>
+                </div>
+                <ul class="py-1 text-gray-700 text-sm" role="none">
+                  <li>
+                    <a href="index.html"
+                      class="transition-all block w-full text-left px-4 py-2 hover:bg-gray-200"
+                      role="menuitem">
+                      <i class="material-symbols-outlined mr-2 inline-block align-middle">team_dashboard</i>
+                      <span class="inline-block align-middle">Dashboard</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="usage.html"
+                      class="transition-all block w-full text-left px-4 py-2 hover:bg-gray-200"
+                      role="menuitem">
+                      <i class="material-symbols-outlined mr-2 inline-block align-middle">add_notes</i>
+                      <span class="inline-block align-middle">Increase Storage / Certificates</span>
+                    </a>
+                  </li>
+                  <li>
+                    <button v-on:click="signOut"
+                      class="transition-all block w-full text-left px-4 py-2 hover:bg-gray-200"
+                      role="menuitem">
+                      <i class="material-symbols-outlined mr-2 inline-block align-middle">logout</i>
+                      <span class="inline-block align-middle">Sign out</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  
+    <aside id="logo-sidebar"
+      :class="{ '-translate-x-full': isMenuOpen }"
+      class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform bg-gray-50 border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+      aria-label="Sidebar">
+      <div class="h-full px-3 pb-4 overflow-y-auto dark:bg-gray-800">
+        <div class="space-y-2 font-medium">
+          <div v-for="item of menuItems">
+            <a :href="item.href" :class="{ 'bg-blue-800': item.selected, 'text-white': item.selected }"
+              class="transition-all flex items-center p-2 rounded-lg dark:text-white hover:bg-gray-200 hover:text-black dark:hover:bg-gray-700">
+              <i class="material-symbols-outlined">{{ item.icon }}</i>
+              <span class="flex-1 ml-3 whitespace-nowrap">{{ item.name }}</span>
+              <!-- <span class="inline-flex items-center justify-center px-2 ml-3 text-sm font-medium text-gray-800 bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300">Pro</span> -->
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  
+    <div class="p-6 sm:ml-64 mt-16 gap-y-6 flex-col flex">
+      <div v-if="!userData.domain"
+        class="w-full h-36 flex-col flex justify-center items-center bg-gray-200 rounded-md border-dashed border-2 border-gray-400 text-gray-500 font-semibold">
+        <span class="loader block mb-5"></span>
+        <div class="mt-5">Loading...</div>
+      </div>
+
+      <div v-if="userData.domain" class="flex-col flex gap-y-6">
+        <h2 class="font-semibold text-gray-600 text-3xl">Advanced Features</h2>
+
+        <div class="flex md:flex-row md:gap-x-4 flex-col gap-y-4">
+          <div class="flex-1 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+            <i class="material-symbols-outlined text-5xl text-gray-600">apartment</i><br>
+            <div>
+              <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">{{ userData.addr }}</h5>
+            </div>
+            <p class="mb-3 font-normal text-gray-500">Flow Address</p>
+            <a :href="`https://testnet.flowscan.org/account/${userData.addr}`" class="inline-flex items-center text-blue-600 hover:underline" target="_blank">
+              <i class="material-symbols-outlined mr-2 inline-block align-middle">open_in_new</i>
+              <span class="inline-block align-middle">View on Flowscan</span>
+            </a>
+          </div>
+
+          <div class="flex-1 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+            <i class="material-symbols-outlined text-5xl text-gray-600">storage</i><br>
+            <div>
+              <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Explore Storage</h5>
+            </div>
+            <p class="mb-3 font-normal text-gray-500">Explore your Flow account's storage</p>
+            <a :href="`https://testnet.flowview.app/account/${userData.addr}`" class="inline-flex items-center text-blue-600 hover:underline" target="_blank">
+              <i class="material-symbols-outlined mr-2 inline-block align-middle">open_in_new</i>
+              <span class="inline-block align-middle">Open Flowview</span>
+            </a>
+          </div>
+        </div>
+
+        <h1>More features coming soon, such as API access!</h1>
+      </div>
+    </div>  
+  </div>
+
+  <script>
+    window.onerror = function (message, source, lineno, colno, error) {
+      alert("Global error: " + error.message + ", lineno: " + lineno);
+      return true;
+    };
+
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          userData: {},
+          collections: {},
+          isMenuOpen: true,
+          isUserMenuOpen: false,
+          menuItems: [
+            {
+              name: "All Certificates",
+              icon: "workspace_premium",
+              selected: false,
+              href: "index.html",
+            },
+            {
+              name: "New Certificate Collection",
+              icon: "note_add",
+              selected: false,
+              href: "create.html",
+            },
+            {
+              name: "Verify Certificates",
+              icon: "task",
+              selected: false,
+              href: "../verify.html",
+            },
+            {
+              name: "Usage & Billing",
+              icon: "credit_card",
+              selected: false,
+              href: "usage.html",
+            },
+            {
+              name: "Advanced Information",
+              icon: "more_vert",
+              selected: true,
+              href: "advanced.html",
+            },
+          ],
+        };
+      },
+      async mounted() {
+        // check if signed in
+        fcl.currentUser.subscribe(async currentUser => {
+          if (currentUser.addr == null) {
+            localStorage.removeItem("token");
+            location.href = "../login.html";
+            return;
+          }
+          else {
+            let token = localStorage.getItem("token");
+            if (token) {
+              let res = await fetch(`${apiRoot}/api/checkToken`, {
+                method: "post",
+                body: "{}",
+                headers: {
+                  "content-type": "application/json",
+                  "authorization": token,
+                },
+              }).then(res => res.json());
+
+              if (!res.data.setup) {
+                location.href = "../login.html";
+                return;
+              }
+              this.userData = {
+                addr: res.data.addr,
+              };
+            }
+            else {
+              location.href = "../login.html";
+              return;
+            }
+
+            // get account data and collections
+            fcl.query({
+              cadence: `import FileNFTContract3 from 0x8af0983838671200
+import FilePrivilegesContract from 0x8af0983838671200
+import FlowToken from 0x7e60df042a9c0868
+import FungibleToken from 0x9a0766d93b6608b7
+
+pub fun main(addr: Address): {String: AnyStruct?} {
+    let acct = getAuthAccount(addr)
+
+    let collection = acct.borrow<&FileNFTContract3.FileNFTCollectionIndex>(from: /storage/fileNftIndex)!
+
+    let admin = getAuthAccount(0x8af0983838671200)
+    let adminCapability = acct.borrow<&FilePrivilegesContract.AccountTokenCollection>(from: /storage/filePrivileges)!
+    let accountData = admin.borrow<&FileNFTContract3.FileNFTCentralStorage>(from: /storage/fileNftCentralStorage)!
+
+    let balanceRef = acct
+      .getCapability(/public/flowTokenBalance)
+      .borrow<&FlowToken.Vault{FungibleToken.Balance}>()
+      ?? panic("Could not borrow FungibleToken.Balance reference")
+    
+    return {
+      "account": accountData.getFullAccountData(accountTokenCollection: adminCapability),
+      "collections": collection.getItems(),
+      "flow": balanceRef.balance,
+      "storageUsed": acct.storageUsed
+    }
+}`,
+              args: (arg, t) => [
+                arg(this.userData.addr, t.Address),
+              ],
+            }).then((queryRes) => {
+              console.log(queryRes);
+              this.userData.domain = queryRes.account.verifiedDomain;
+              this.userData.sCreationLeft = queryRes.account.sCreationLeft;
+              this.userData.flowBalance = queryRes.flow;
+              this.userData.storageUsed = queryRes.storageUsed;
+              this.collections = queryRes.collections;
+            });
+          }
+        });
+      },
+      methods: {
+        async signOut() {
+          fcl.unauthenticate(); location.href = '../login.html';
+        },
+      },
+    }).mount('#app');
+  </script>
+</body>
+
+</html>

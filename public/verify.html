@@ -16,6 +16,8 @@
   <script src="fcl.min.js"></script>
   <script src="standard-fcl.js"></script>
 
+  <title>FlowCerts</title>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.min.js"
     integrity="sha512-KEoL9wKXt/fhlAfN+ZNXf3pI48aaQE9Qd5fihHY+5n5XLTSnyGJ0uKgUj//V6KAcjFwzAbCYYPKeGlFES/H5Ng=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -57,6 +59,10 @@
             <a :href="pdfDownloadHref" :download="pdfDownloadName" class="flex flex-row items-center bg-gray-200 hover:bg-gray-400 transition-all cursor-pointer p-2 rounded-md">
               <i class="material-symbols-outlined">download</i>
               <span class="flex-1 ml-3 whitespace-nowrap sm:block hidden">Download PDF</span>
+            </a>
+            <a v-on:click="moreInformation = true" class="flex flex-row items-center bg-gray-200 hover:bg-gray-400 transition-all cursor-pointer p-2 rounded-md">
+              <i class="material-symbols-outlined">info</i>
+              <span class="flex-1 ml-3 whitespace-nowrap sm:block hidden">More Information</span>
             </a>
           </div>
         </div>
@@ -100,6 +106,12 @@
 
         <button v-on:click="loadFromFile"
           class="bg-black w-full rounded-md px-4 py-2 h-min font-semibold cursor-pointer text-white hover:bg-gray-500 transition">Continue</button>
+
+        <div class="text-center text-sm font-semibold mt-8">Powered by</div>
+        <div class="flex flex-row gap-x-8 mt-4 justify-center">
+          <img src="img/flow.png" class="max-h-10 h-10 w-auto" />
+          <img src="img/secured_chainlink_badge.jpg" class="max-h-10 h-10 w-auto" />
+        </div>
       </div>
 
       <div class="h-screen pt-20 overflow-y-scroll p-6 flex-1 sm:block"
@@ -107,6 +119,9 @@
         <div v-if="certificateState === 'none'">
           <h2 class="font-semibold text-2xl text-gray-700 text-center">Certificate Details</h2>
           <p class="text-center mt-4">Upload a certificate to view verification details.</p>
+          <p class="text-center mt-4">
+            <a href="https://flowcerts.net/#74SKTwnuWXo1bxHSkcUsbz/dNW2cRtyjhS9yrdZFa1oNv" class="text-blue-700 underline">Load a sample certificate</a>
+          </p>
         </div>
 
         <div v-if="certificateState === 'success'"
@@ -157,6 +172,55 @@
         </div>
       </div>
     </div>
+
+    <div v-if="moreInformation" class="z-50 fixed top-0 left-0 w-screen h-screen transition-all flex flex-row items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);" :style="{ 'backdrop-filter': `blur(${ moreInformation ? 4 : 0 }px)` }">
+      <div class="bg-white rounded-xl p-6 w-3/4 h-96 max-h-screen overflow-y-scroll flex-col flex gap-y-2">
+        <h1 class="font-semibold text-3xl">More Information</h1>
+        <span class="text-blue-700 underline cursor-pointer" v-on:click="moreInformation = false">close</span>
+        <p>File name: {{ certificateFile.fileName }}</p>
+        <p>Original file hash: {{ certificateFile.originalFileHash }}</p>
+        <p>Is currently encrypted: {{ certificateFile.isEncrypted }}</p>
+        <p>Is currently active: {{ certificateFile.isActive }}</p>
+        <p>Parent collection name: {{ certificateFile.collectionName }}</p>
+        <textarea class="bg-gray-100 border-2 border-gray-300 p-2 w-full rounded-md" style="font-family: monospace;" rows="5">// Cadence script used to read the certificate
+import FileNFTContract3 from 0x8af0983838671200
+import FilePrivilegesContract from 0x8af0983838671200
+import FileShortcutsContract4 from 0x8af0983838671200
+
+pub fun main(shortcut: String): {String: String} {
+  // Get shortcut
+  let address = FileShortcutsContract4.getA(key: shortcut)
+  let collectionId = FileShortcutsContract4.getC(key: shortcut)
+  let tokenId = FileShortcutsContract4.getF(key: shortcut)
+
+  let output: {String: String} = {}
+
+  // Basic data
+  let publicInterface = getAccount(address).getCapability<&AnyResource{FileNFTContract3.FileNFTCollectionPublicInterface}>(PublicPath(identifier: "fileNftCollection_".concat(collectionId))!).borrow()!
+
+  let file <- publicInterface.getFile(id: tokenId)
+
+  output["id"] = file.id
+  output["fileData"] = file.fileData
+  output["fileName"] = file.fileName
+  output["isEncrypted"] = file.isEncrypted == true ? "true" : "false"
+  output["collectionName"] = file.collectionName
+  output["originalFileHash"] = file.originalFileHash
+  output["isActive"] = file.isActive == true ? "true" : "false"
+
+  // Verification data
+  let verificationPublicInterface = getAccount(0x8af0983838671200).getCapability<&AnyResource{FileNFTContract3.AccountDataSource}>(/public/accountDataSource).borrow()!
+
+  let verificationData = verificationPublicInterface.getCollectionVerificationData(collectionId: collectionId)
+  output["verifiedDomain"] = verificationData["verifiedDomain"]!
+  output["verifyLink"] = verificationData["verifyLink"]!
+
+  destroy file
+
+  return output
+}</textarea>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -170,6 +234,7 @@
     createApp({
       data() {
         return {
+          moreInformation: false,
           pdfDownloadHref: "",
           pdfDownloadName: "",
           certificateState: "none", // none, loading, success, failure
@@ -177,7 +242,7 @@
           certificateCheckInfo: [], // array of strings
           checks: {
             metadata: { success: "Loaded certificate metadata.", failure: "Could not find certificate metadata. Please upload a valid file or use a valid URL." },
-            found: { success: "Certificate found on the Flow blockchain.", failure: "Certificate DOES NOT EXIST on the Flow blockchain." },
+            found: { success: "Certificate found on the Flow blockchain.", failure: "Certificate DOES NOT EXIST on the Flow blockchain. If you just created it, please check that you have sufficient FLOW balance in your account, or reload in a minute or two, as the certificate may still be loading." },
             decrypted: { success: "Certificate decrypted.", failure: "Could not decrypt certificate." },
             integrity: { success: "Integrity verified. Certificate has not been tampered with.", failure: "Integrity VIOLATION. Certificate may have been tampered with!" },
           },

@@ -14,6 +14,8 @@
   <script src="../fcl.min.js"></script>
   <script src="../standard-fcl.js"></script>
 
+  <title>FlowCerts</title>
+
   <script>
     tailwind.config = {
       darkMode: ['never']
@@ -162,7 +164,7 @@
               <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">{{ userData.storageUsed / 1000000 }} of ~{{ Math.round(userData.flowBalance * 100) }} MB</h5>
             </div>
             <p class="mb-3 font-normal text-gray-500">account data storage consumed</p>
-            <a :href="`https://testnet.flowscan.org/account/${userData.addr}`" class="inline-flex items-center text-blue-600 hover:underline" target="_blank">
+            <a href="usage.html" class="inline-flex items-center text-blue-600 hover:underline">
               <i class="material-symbols-outlined mr-2 inline-block align-middle">add</i>
               <span class="inline-block align-middle">Increase</span>
             </a>
@@ -174,10 +176,18 @@
               <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">~{{ userData.sCreationLeft }} certificates</h5>
             </div>
             <p class="mb-3 font-normal text-gray-500">certificate quota remaining</p>
-            <a :href="`https://testnet.flowscan.org/account/${userData.addr}`" class="inline-flex items-center text-blue-600 hover:underline" target="_blank">
+            <a href="usage.html" class="inline-flex items-center text-blue-600 hover:underline">
               <i class="material-symbols-outlined mr-2 inline-block align-middle">add</i>
               <span class="inline-block align-middle">Buy more</span>
             </a>
+          </div>
+        </div>
+
+        <div v-if="userData.flowBalance < 1"
+          class="bg-red-200 flex-row flex text-red-800 items-center p-4 rounded-lg border-red-800 border-2">
+          <i class="material-symbols-outlined font-semibold" style="font-size: 3rem;">warning</i>
+          <div class="sm:ml-4">
+            <p class="font-semibold">Your Flow account balance ({{userData.flowBalance}}) is very low. Certificate uploading / creation may fail. Please add more FLOW using the Testnet faucet. Thank you!</p>
           </div>
         </div>
 
@@ -244,7 +254,7 @@
         return {
           userData: {},
           collections: {},
-          isMenuOpen: false,
+          isMenuOpen: true,
           isUserMenuOpen: false,
           menuItems: [
             {

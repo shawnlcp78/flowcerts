@@ -675,7 +675,8 @@ Banner Style
 }
 
 .main-banner .item-1 {
-  background-image: url(../images/banner-item-01.jpg);
+  /* background-image: url(../../img/bg.jpg); */
+  background: linear-gradient(rgba(0, 0, 0, 0.60), rgba(0, 0, 0, 0.60)), url(../../img//bg.jpg) no-repeat center; background-size: cover;
 }
 
 .main-banner .item-2 {

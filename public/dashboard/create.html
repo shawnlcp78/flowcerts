@@ -14,9 +14,17 @@
   <script src="../fcl.min.js"></script>
   <script src="../standard-fcl.js"></script>
 
+  <title>FlowCerts</title>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.min.js"
     integrity="sha512-KEoL9wKXt/fhlAfN+ZNXf3pI48aaQE9Qd5fihHY+5n5XLTSnyGJ0uKgUj//V6KAcjFwzAbCYYPKeGlFES/H5Ng=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: ['never']
+    };
+  </script>
 
   <style>
     * { user-select: none; }
@@ -247,8 +255,6 @@
             </div>
           </div>
         </div>
-
-        <div><img src="../new-file.png" class="h-auto w-auto" /></div>
   
         <button v-on:click="step2GoToSecurity();"
           class="bg-black rounded-md px-4 py-2 h-min font-semibold cursor-pointer text-white hover:bg-gray-500 transition">Continue</button>
@@ -407,7 +413,7 @@
           ],
           userData: {},
           collections: [],
-          isMenuOpen: false,
+          isMenuOpen: true,
           isUserMenuOpen: false,
           isCreatingCollection: false,
           boxClientRect: null,
